@@ -2,9 +2,12 @@
 <network-security-config>
     <!-- Allow cleartext traffic for Listen Together local servers -->
     <!-- We're already using WSS for the prod server -->
+    <!-- Trust both system CAs and user-installed CAs (e.g. filtering/VPN
+         certificates installed on the device) to avoid TLS errors. -->
     <base-config cleartextTrafficPermitted="true">
         <trust-anchors>
             <certificates src="system" />
+            <certificates src="user" />
         </trust-anchors>
     </base-config>
 </network-security-config>
