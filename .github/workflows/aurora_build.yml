@@ -61,6 +61,15 @@ jobs:
           METROLIST_DEBUG_KEYSTORE_PATH: aurora-debug.keystore
           PULL_REQUEST: "false"
 
+      - name: Run unit tests (playback, cipher, parsers, app)
+        run: ./gradlew --console=plain :innertube:testDebugUnitTest :app:testFossDebugUnitTest --warning-mode summary
+        env:
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+          METROLIST_APPLICATION_ID: com.metrolist.music.aurora
+          METROLIST_APP_NAME: Metrolist Aurora
+          METROLIST_DEBUG_KEYSTORE_PATH: aurora-debug.keystore
+          PULL_REQUEST: "false"
+
       - name: Upload APK
         uses: actions/upload-artifact@v6
         with:
