@@ -1,7 +1,6 @@
 package com.metrolist.music.ui.screens.settings
 
 import android.content.res.Configuration
-import android.os.Build
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
@@ -48,8 +47,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -63,7 +60,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -78,6 +74,7 @@ import com.metrolist.music.constants.DynamicThemeKey
 import com.metrolist.music.constants.PureBlackKey
 import com.metrolist.music.constants.PureBlackMiniPlayerKey
 import com.metrolist.music.constants.SelectedThemeColorKey
+import com.metrolist.music.ui.theme.AuroraSeedColor
 import com.metrolist.music.ui.theme.DefaultThemeColor
 import com.metrolist.music.ui.theme.MetrolistTheme
 import com.metrolist.music.utils.rememberEnumPreference
@@ -422,7 +419,6 @@ fun ModeCircle(
     showIcon: Boolean,
     onClick: () -> Unit
 ) {
-    val context = LocalContext.current
     val isSystemDark = isSystemInDarkTheme()
     val isSelected = darkMode == targetMode && pureBlack == targetPureBlack
     
@@ -432,16 +428,12 @@ fun ModeCircle(
         DarkMode.OFF -> false
     }
     
-    // Use actual system colors for AUTO mode on Android 12+
-    val modeColorScheme = if (targetMode == DarkMode.AUTO && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-        if (effectiveDark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-    } else {
-        rememberDynamicColorScheme(
-            seedColor = DefaultThemeColor,
-            isDark = effectiveDark,
-            style = PaletteStyle.TonalSpot
-        )
-    }
+    // Preview with the Aurora brand palette, matching MetrolistTheme
+    val modeColorScheme = rememberDynamicColorScheme(
+        seedColor = AuroraSeedColor,
+        isDark = effectiveDark,
+        style = PaletteStyle.Vibrant
+    )
     
     val fillColor = when {
         targetPureBlack -> Color.Black

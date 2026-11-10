@@ -6,26 +6,59 @@
 package com.metrolist.music.ui.theme
 
 import android.graphics.Bitmap
-import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
+import androidx.compose.material3.Shapes
+import androidx.compose.material3.Typography
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.SaverScope
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.palette.graphics.Palette
 import com.materialkolor.PaletteStyle
 import com.materialkolor.dynamiccolor.ColorSpec
 import com.materialkolor.rememberDynamicColorScheme
 import com.materialkolor.score.Score
 
+// Sentinel value stored in preferences for the "default / dynamic" palette.
+// Kept unchanged so existing user preferences continue to work.
 val DefaultThemeColor = Color(0xFFED5564)
+
+// "Aurora" brand color used whenever the default palette is selected
+// and no album-art color is available.
+val AuroraSeedColor = Color(0xFF6C5CE7)
+
+private val AuroraShapes = Shapes(
+    extraSmall = RoundedCornerShape(8.dp),
+    small = RoundedCornerShape(14.dp),
+    medium = RoundedCornerShape(20.dp),
+    large = RoundedCornerShape(28.dp),
+    extraLarge = RoundedCornerShape(34.dp),
+)
+
+private val AuroraTypography: Typography = Typography().let { base ->
+    base.copy(
+        displayLarge = base.displayLarge.copy(fontWeight = FontWeight.Black, letterSpacing = (-0.5).sp),
+        displayMedium = base.displayMedium.copy(fontWeight = FontWeight.Black, letterSpacing = (-0.25).sp),
+        displaySmall = base.displaySmall.copy(fontWeight = FontWeight.ExtraBold),
+        headlineLarge = base.headlineLarge.copy(fontWeight = FontWeight.ExtraBold, letterSpacing = (-0.25).sp),
+        headlineMedium = base.headlineMedium.copy(fontWeight = FontWeight.Bold),
+        headlineSmall = base.headlineSmall.copy(fontWeight = FontWeight.Bold),
+        titleLarge = base.titleLarge.copy(fontWeight = FontWeight.Bold),
+        titleMedium = base.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+        titleSmall = base.titleSmall.copy(fontWeight = FontWeight.SemiBold),
+        labelLarge = base.labelLarge.copy(fontWeight = FontWeight.SemiBold),
+        labelMedium = base.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+    )
+}
 
 @Composable
 fun MetrolistTheme(
@@ -34,37 +67,47 @@ fun MetrolistTheme(
     themeColor: Color = DefaultThemeColor,
     content: @Composable () -> Unit,
 ) {
-    val context = LocalContext.current
-    // Determine if system dynamic colors should be used (Android S+ and default theme color)
-    val useSystemDynamicColor = (themeColor == DefaultThemeColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
+    // The default palette now maps to the Aurora brand color instead of the wallpaper colors.
+    val seedColor = if (themeColor == DefaultThemeColor) AuroraSeedColor else themeColor
 
-    // Select the appropriate color scheme generation method
-    val baseColorScheme = if (useSystemDynamicColor) {
-        // Use standard Material 3 dynamic color functions for system wallpaper colors
-        if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-    } else {
-        // Use materialKolor only when a specific seed color is provided
-        rememberDynamicColorScheme(
-            seedColor = themeColor, // themeColor is guaranteed non-default here
-            isDark = darkTheme,
-            specVersion = ColorSpec.SpecVersion.SPEC_2025,
-            style = PaletteStyle.TonalSpot // Keep existing style
-        )
-    }
+    val baseColorScheme = rememberDynamicColorScheme(
+        seedColor = seedColor,
+        isDark = darkTheme,
+        specVersion = ColorSpec.SpecVersion.SPEC_2025,
+        style = PaletteStyle.Vibrant,
+    )
 
-    // Apply pureBlack modification if needed, similar to original logic
     val colorScheme = remember(baseColorScheme, pureBlack, darkTheme) {
-        if (darkTheme && pureBlack) {
-            baseColorScheme.pureBlack(true)
-        } else {
-            baseColorScheme
+        when {
+            darkTheme && pureBlack -> baseColorScheme.pureBlack(true)
+            darkTheme -> baseColorScheme.midnight()
+            else -> baseColorScheme
         }
     }
 
-    // Use standard MaterialTheme instead of MaterialExpressiveTheme
     MaterialTheme(
         colorScheme = colorScheme,
+        shapes = AuroraShapes,
+        typography = AuroraTypography,
         content = content,
+    )
+}
+
+/**
+ * Deepens dark-theme surfaces toward black for the "Aurora" night look,
+ * keeping the tonal hierarchy between surface container levels.
+ */
+private fun ColorScheme.midnight(): ColorScheme {
+    fun Color.deepen(fraction: Float) = lerp(this, Color.Black, fraction)
+    return copy(
+        background = background.deepen(0.45f),
+        surface = surface.deepen(0.45f),
+        surfaceDim = surfaceDim.deepen(0.45f),
+        surfaceContainerLowest = surfaceContainerLowest.deepen(0.45f),
+        surfaceContainerLow = surfaceContainerLow.deepen(0.35f),
+        surfaceContainer = surfaceContainer.deepen(0.3f),
+        surfaceContainerHigh = surfaceContainerHigh.deepen(0.25f),
+        surfaceContainerHighest = surfaceContainerHighest.deepen(0.2f),
     )
 }
 
